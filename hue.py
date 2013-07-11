@@ -3,11 +3,12 @@ import json
 import random
 import time
 import math
+import os
 
 import processimage
 from sympy import Point, Line, Polygon
 
-ip = '10.0.1.2'
+ip = '10.0.1.3'
 path = '/api/newdeveloper/'
 lights = {
     '1': 'lights/1/',
@@ -15,7 +16,7 @@ lights = {
     '3': 'lights/3/'
 }
 
-BRIGHTNESS = 200
+BRIGHTNESS = 30
 
 pr = Point(0.675, 0.322, evaluate=False)
 pg = Point(0.409, 0.518, evaluate=False)
@@ -78,12 +79,13 @@ def random_lights():
             data = json.dumps({
                 "sat": 255,
                 "bri": BRIGHTNESS,
-                "hue": hues[k]
+                "hue": hues[k],
+                # 'transitiontime': 20
             })
             print data
             r = requests.put(url, data)
             print 'foo'
-        time.sleep(1)
+        time.sleep(2)
 
 def set_all_lights_one_color(data):
     for l in lights:
@@ -95,7 +97,9 @@ def get_xy_from_rgb(rgb):
     """
     Convert rgb color to CIE colorspace.
     """
-    print "...GET_XY " + str(rgb) 
+    print "...GET_XY " + str(rgb)
+    if rgb == (0, 0, 0):
+        rgb = (10, 10, 10)
     c = [ v / float(255) for v in rgb ]
     print c[0], c[1], c[2]
 
@@ -121,7 +125,9 @@ def get_xy_from_rgb(rgb):
 
     p = Point(x, y, evaluate=False)
     
-    if gamut_tri.encloses_point(p):
+    poly = [(0.675, 0.322), (0.409, 0.518), (0.167, 0.0625)]
+    if (point_inside_polygon(x, y, poly)):
+    # if gamut_tri.encloses_point(p):
         return x, y
     else:
         x, y = get_closest_color(x, y)
@@ -129,10 +135,32 @@ def get_xy_from_rgb(rgb):
         print " "
         return x, y
 
+def point_inside_polygon(x, y, poly):
+    """
+    Return if point is inside polygon.
+
+    Polygon represented by list of (x, y) tuples.
+    """
+    n = len(poly)
+    inside =False
+
+    p1x,p1y = poly[0]
+    for i in range(n + 1):
+        p2x,p2y = poly[i % n]
+        if y > min(p1y, p2y):
+            if y <= max(p1y, p2y):
+                if x <= max(p1x, p2x):
+                    if p1y != p2y:
+                        xinters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+                    if p1x == p2x or x <= xinters:
+                        inside = not inside
+        p1x,p1y = p2x,p2y
+
+    return inside
 
 # RED (0.675, 0.322)
 # GREEN (0.409, 0.518)
-# BLUE (0.167, 0.0625))
+# BLUE (0.167, 0.0625)
 def get_closest_color(x, y):
     print "...GET_CLOSEST_COLOR " + str(x) + " " + str(y) 
 
@@ -168,7 +196,8 @@ def set_lights_different_colors(colors):
         data = json.dumps({
             # "sat": 255,
             "bri": BRIGHTNESS,
-            "xy": [float(c[0]), float(c[1])]
+            "xy": [float(c[0]), float(c[1])],
+            'transitiontime': 30
             # 'hue': 25500
         })
         print data
@@ -224,8 +253,8 @@ def do_rgb(rgbs):
     # set_all_lights_one_color(data)
 
 
-def do_screenshot():
-    hexes = processimage.colorz('/Users/karlshouler/Desktop/vamp2.png', 3)
+def do_screenshot(image):
+    hexes = processimage.colorz(image, 3)
     print hexes
     rgbs = []
     for h in hexes:
@@ -234,10 +263,20 @@ def do_screenshot():
         # rgbs.append(hex_to_rgb(h))
     do_rgb(rgbs)
 
-# random_lights()
+
+def do_movie():
+    while (1):
+        os.system("/usr/sbin/screencapture -R\"100,100,1200,500\" /Users/karlshouler/Dropbox/dev/scripts/hue-hacking/frame.png")
+        do_screenshot("/Users/karlshouler/Dropbox/dev/scripts/hue-hacking/frame.png")
+
+
+
 print "...START"
-do_screenshot()
+# random_lights()
+# do_screenshot('/Users/karlshouler/Desktop/vamp1.png')
 # do_rgb()
+
+do_movie()
 
 # p = Polygon((0, 0), (4, 4), (4, 0))
 # print p.encloses_point(Point(2, 0.5))

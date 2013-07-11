@@ -245,11 +245,34 @@ def do_movie():
         do_image("/Users/karlshouler/Dropbox/dev/scripts/hue-hacking/frame.png")
 
 
+###################### Hack Day timer ######################
+
+timer_map = [
+    ('green', 10),
+    ('light_blue', 10),
+    ('yellow', 5),
+    ('red', 5),
+]
+
+def do_hackday_timer():
+    for t in timer_map:  
+        data = json.dumps({
+            # "sat": 255,
+            "bri": BRIGHTNESS,
+            "xy": color_map[t[0]],
+            'transitiontime': TRANS
+            # 'hue': 25500
+        })
+        set_all_lights_one_color(data)
+
+        time.sleep(t[1])
+
+
 print "...START"
 # random_lights()
 # do_image('/Users/karlshouler/Desktop/vamp1.png')
 # do_rgb()
-
+# do_hackday_timer()
 do_movie()
 
 

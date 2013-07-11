@@ -230,6 +230,7 @@ def do_image(image):
     hexes = processimage.colorz(image, 3)
     print hexes
     rgbs = []
+    random.shuffle(rgbs)
     for h in hexes:
         rgbs.append(hex_to_rgb(h))
     do_rgb(rgbs)

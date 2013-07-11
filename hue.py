@@ -17,12 +17,13 @@ lights = {
 }
 
 BRIGHTNESS = 30
+TRANS = 20
 
 pr = Point(0.675, 0.322, evaluate=False)
 pg = Point(0.409, 0.518, evaluate=False)
 pb = Point(0.167, 0.0625, evaluate=False)
 
-gamut_tri = Polygon(pr, pg, pb)
+# gamut_tri = Polygon(pr, pg, pb)
 
 ## lines
 # l1 = Line(pb, pg) ## top-left
@@ -80,7 +81,7 @@ def random_lights():
                 "sat": 255,
                 "bri": BRIGHTNESS,
                 "hue": hues[k],
-                # 'transitiontime': 20
+                'transitiontime': TRANS
             })
             print data
             r = requests.put(url, data)
@@ -127,7 +128,6 @@ def get_xy_from_rgb(rgb):
     
     poly = [(0.675, 0.322), (0.409, 0.518), (0.167, 0.0625)]
     if (point_inside_polygon(x, y, poly)):
-    # if gamut_tri.encloses_point(p):
         return x, y
     else:
         x, y = get_closest_color(x, y)
@@ -158,6 +158,7 @@ def point_inside_polygon(x, y, poly):
 
     return inside
 
+
 # RED (0.675, 0.322)
 # GREEN (0.409, 0.518)
 # BLUE (0.167, 0.0625)
@@ -172,22 +173,6 @@ def get_closest_color(x, y):
 
     return color_map[color_str][0], color_map[color_str][1]
 
-    # point = Point(x, y, evaluate=False)
-    # print "    " + str(point)
-
-    # new_point = try_color_polys(point)
-    # if new_point:
-    #     return new_point.x, new_point.y
-
-    # line = get_relative_line(point)
-    
-    # s1 = line.perpendicular_segment(point)
-    # new_point = s1.points[1].evalf()
-    # print "new_point: " + str(new_point.x) + " " + str(new_point.y)
-    # if new_point.x == point.x:
-    #     new_point = s1.points[0].evalf()
-    # return new_point.x, new_point.y
-
 
 def set_lights_different_colors(colors):
     l = 1
@@ -197,7 +182,7 @@ def set_lights_different_colors(colors):
             # "sat": 255,
             "bri": BRIGHTNESS,
             "xy": [float(c[0]), float(c[1])],
-            'transitiontime': 30
+            'transitiontime': TRANS
             # 'hue': 25500
         })
         print data
@@ -222,18 +207,6 @@ def get_relative_line(point):
         return l1
 
 
-def try_color_polys(point):
-    
-
-    if blue_poly.encloses_point(point):
-        return Point(0.2, 0.1)
-    else:
-        return False
-
-
-
-
-
 def hex_to_rgb(value):
     value = value.lstrip('#')
     lv = len(value)
@@ -247,39 +220,36 @@ def do_rgb(rgbs):
         x, y = get_xy_from_rgb(r)
         all_colors.append((x,y))
 
-    # print all_colors
     set_lights_different_colors(all_colors)
 
-    # set_all_lights_one_color(data)
 
-
-def do_screenshot(image):
+def do_image(image):
+    """
+    Set lights to three dominant colors of image.
+    """
     hexes = processimage.colorz(image, 3)
     print hexes
     rgbs = []
     for h in hexes:
         rgbs.append(hex_to_rgb(h))
-        # rgbs.append(hex_to_rgb(h))
-        # rgbs.append(hex_to_rgb(h))
     do_rgb(rgbs)
 
 
 def do_movie():
+    """
+    Continuously take screenshots and put colors to lights.
+    """
     while (1):
         os.system("/usr/sbin/screencapture -R\"100,100,1200,500\" /Users/karlshouler/Dropbox/dev/scripts/hue-hacking/frame.png")
-        do_screenshot("/Users/karlshouler/Dropbox/dev/scripts/hue-hacking/frame.png")
-
+        do_image("/Users/karlshouler/Dropbox/dev/scripts/hue-hacking/frame.png")
 
 
 print "...START"
 # random_lights()
-# do_screenshot('/Users/karlshouler/Desktop/vamp1.png')
+# do_image('/Users/karlshouler/Desktop/vamp1.png')
 # do_rgb()
 
 do_movie()
-
-# p = Polygon((0, 0), (4, 4), (4, 0))
-# print p.encloses_point(Point(2, 0.5))
 
 
 
